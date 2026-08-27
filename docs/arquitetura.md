@@ -1,6 +1,7 @@
+
 # 🗺️ Relatório de Arquitetura e Modelagem — ConectaMente
 
-Este documento apresenta a modelagem da solução **ConectaMente** para a Etapa 2 do Projeto Integrador II[span_0](start_span)[span_0](end_span).
+Este documento apresenta a modelagem da solução **ConectaMente** para a Etapa 2 do Projeto Integrador II.
 
 ---
 
@@ -31,8 +32,7 @@ flowchart TB
     D & E & F & G --> H
     D --> I
 
-
-
+2. Fluxo de Funcionamento
 flowchart TD
     Start([🚀 Início]) --> Login[🔐 Login Escolar]
     Login --> Papel{👤 Perfil}
@@ -54,6 +54,8 @@ flowchart TD
     Papel -->|🏫 Coordenação| PainelC[🏢 Painel Adm]
     PainelC --> Metricas[📈 Relatório de Dúvidas]
     PainelC --> Certifica[📜 Valida Horas]
+
+3. Modelo de Dados (Diagrama ER)
 erDiagram
     USUARIO {
         int id PK
@@ -109,5 +111,14 @@ erDiagram
     ATENDIMENTO ||--o| AVALIACAO : "recebe"
     USUARIO ||--o{ CERTIFICADO : "recebe"
 
-
+4. Protótipo de Telas
+| Tela | Módulo Principal |
+|---|---|
+| Login / Cadastro | Autenticação com e-mail institucional |
+| Painel do Aprendiz | Criar dúvida e visualizar chamados ativos |
+| Painel do Monitor | Filtro de dúvidas por matéria e aceite |
+| Chat e Agendamento | Troca de mensagens e definição de local/horário |
+| Painel da Coordenação | Gestão de horas e emissão de certificados |
+5. Rastreabilidade (Trello ↔ GitHub)
+Os cartões do Trello são vinculados diretamente às issues e commits do GitHub utilizando a numeração da tarefa (exemplo: git commit -m "feat: modulo de duvidas #3").
 
