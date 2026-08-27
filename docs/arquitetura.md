@@ -1,67 +1,78 @@
 
-# 🗺️ Relatório de Arquitetura e Modelagem — ConectaMente
+# Arquitetura da Solução — ConectaMente
 
-Este documento apresenta a modelagem da solução **ConectaMente** para a Etapa 2 do Projeto Integrador II.
-
----
-
-## 1. Arquitetura do Sistema
+## 1. Fluxo do sistema
 
 ```mermaid
-flowchart TB
-    subgraph Cliente["🖥️ Camada Cliente"]
-        A[📱 App Web / Mobile]
-    end
-
-    subgraph Servidor["⚙️ Camada de Aplicação"]
-        B[🔌 API Backend]
-        C[🔑 Autenticação]
-        D[❓ Módulo de Dúvidas]
-        E[📅 Agendamentos]
-        F[💬 Chat Interno]
-        G[🏆 Certificados e Avaliações]
-    end
-
-    subgraph Dados["🗄️ Camada de Dados"]
-        H[(🛢️ Banco de Dados)]
-        I[(📁 Storage de Imagens)]
-    end
-
-    A -->|HTTP| B
-    B --> C & D & E & F & G
-    D & E & F & G --> H
-    D --> I
-
-2. Fluxo de Funcionamento
 flowchart TD
-    Start([🚀 Início]) --> Login[🔐 Login Escolar]
-    Login --> Papel{👤 Perfil}
+    A[Início] --> B[Login ou Cadastro]
+    B --> C[Escolher tipo de usuário]
+    C --> D{Precisa de ajuda?}
 
-    Papel -->|🎓 Aprendiz| Duvida[❓ Publica Dúvida]
-    Duvida --> Espera[⏳ Visível no Painel]
-    Espera --> Aceita[✅ Monitor Aceita]
-    Aceita --> Agenda[📅 Agenda Encontro]
-    Agenda --> Chat[💬 Atendimento no Chat]
-    Chat --> Resolve[🎯 Resolve Dúvida]
-    Resolve --> Avalia[⭐ Avalia Atendimento]
-    Avalia --> Registro[⏱️ Registra Horas]
-    Registro --> Painel[📊 Emissão de Certificado]
+    D -->|Sim| E[Selecionar matéria]
+    E --> F[Publicar dúvida]
+    F --> G[Monitor visualiza dúvida]
+    G --> H{Monitor aceita atendimento?}
 
-    Papel -->|👨‍🏫 Monitor| Perfil[📚 Cadastra Matérias]
-    Perfil --> Lista[📋 Lista Dúvidas Abertas]
-    Lista --> Aceita
+    H -->|Não| I[Voltar para dúvidas abertas]
+    I --> G
 
-    Papel -->|🏫 Coordenação| PainelC[🏢 Painel Adm]
-    PainelC --> Metricas[📈 Relatório de Dúvidas]
-    PainelC --> Certifica[📜 Valida Horas]
+    H -->|Sim| J[Agendar atendimento]
+    J --> K[Aluno e monitor realizam atendimento]
+    K --> L[Aluno confirma atendimento]
+    L --> M[Aluno avalia atendimento]
+    M --> N[Coordenação registra atendimento]
+    N --> O[Fim]
 
-3. Modelo de Dados (Diagrama ER)
+    D -->|Não| P[Voltar para tela inicial]
+    P --> O
+
+2. Arquitetura da solução
+
+A solução do ConectaMente é organizada para permitir que alunos encontrem ajuda em matérias nas quais possuem dúvidas, conectando-os com monitores disponíveis.
+
+O sistema possui as seguintes partes principais:
+
+Autenticação e cadastro: permite que o usuário faça login ou crie uma conta no sistema.
+
+Gerenciamento de usuários: identifica o tipo de usuário, como aluno, monitor ou coordenação.
+
+Gerenciamento de matérias: mantém as matérias disponíveis para que o aluno escolha aquela relacionada à sua dúvida.
+
+Gerenciamento de dúvidas: permite que o aluno publique uma dúvida e acompanhe seu atendimento.
+
+Gerenciamento de atendimentos: permite que um monitor aceite uma dúvida e seja realizado o agendamento do atendimento.
+
+Avaliação: permite que o aluno avalie o atendimento realizado.
+
+Coordenação: registra e acompanha os atendimentos realizados e as atividades dos monitores.
+
+Banco de dados: armazena usuários, dúvidas, matérias, atendimentos e avaliações.
+
+
+3. Modelo de dados
+
 erDiagram
+    USUARIO ||--o{ DUVIDA : publica
+    MATERIA ||--o{ DUVIDA : classifica
+    DUVIDA ||--o{ ATENDIMENTO : gera
+    ATENDIMENTO ||--o{ AVALIACAO : recebe
+    USUARIO ||--o{ ATENDIMENTO : participa
+    USUARIO ||--o{ CERTIFICADO : possui
+
     USUARIO {
         int id PK
         string nome
-        string email_escolar
-        string papel
+        string email
+        string senha
+        string tipo_usuario
+    }
+
+    DUVIDA {
+        int id PK
+        string descricao
+        string foto
+        string status
     }
 
     MATERIA {
@@ -69,56 +80,66 @@ erDiagram
         string nome
     }
 
-    DUVIDA {
-        int id PK
-        int aprendiz_id FK
-        int materia_id FK
-        string descricao
-        string status
-    }
-
     ATENDIMENTO {
         int id PK
-        int duvida_id FK
-        int monitor_id FK
+        date data
+        string horario
         string local
-        datetime horario
-    }
-
-    MENSAGEM {
-        int id PK
-        int atendimento_id FK
-        string texto
+        string status
     }
 
     AVALIACAO {
         int id PK
-        int atendimento_id FK
         int nota
+        string comentario
     }
 
     CERTIFICADO {
         int id PK
-        int monitor_id FK
-        int horas_totais
+        date data_emissao
+        int horas_voluntariado
     }
 
-    USUARIO ||--o{ DUVIDA : "publica"
-    MATERIA ||--o{ DUVIDA : "categoriza"
-    DUVIDA ||--o| ATENDIMENTO : "gera"
-    USUARIO ||--o{ ATENDIMENTO : "atende"
-    ATENDIMENTO ||--o{ MENSAGEM : "possui"
-    ATENDIMENTO ||--o| AVALIACAO : "recebe"
-    USUARIO ||--o{ CERTIFICADO : "recebe"
+4. Justificativa das escolhas
 
-4. Protótipo de Telas
-| Tela | Módulo Principal |
-|---|---|
-| Login / Cadastro | Autenticação com e-mail institucional |
-| Painel do Aprendiz | Criar dúvida e visualizar chamados ativos |
-| Painel do Monitor | Filtro de dúvidas por matéria e aceite |
-| Chat e Agendamento | Troca de mensagens e definição de local/horário |
-| Painel da Coordenação | Gestão de horas e emissão de certificados |
-5. Rastreabilidade (Trello ↔ GitHub)
-Os cartões do Trello são vinculados diretamente às issues e commits do GitHub utilizando a numeração da tarefa (exemplo: git commit -m "feat: modulo de duvidas #3").
+Usuário: responsável pelo acesso ao sistema e pelo papel desempenhado na plataforma.
+
+Dúvida: representa a pergunta ou dificuldade publicada pelo aluno, podendo conter descrição, foto e status.
+
+Matéria: organiza as dúvidas de acordo com a disciplina relacionada.
+
+Atendimento: representa a ajuda oferecida pelo monitor ao aluno, podendo possuir data, horário, local e status.
+
+Avaliação: permite que o aluno registre uma nota e um comentário sobre o atendimento.
+
+Certificado: registra a participação do monitor e suas horas de voluntariado.
+
+Banco de dados: permite armazenar e organizar as informações necessárias para o funcionamento do sistema.
+
+
+5. Protótipos de interface
+
+As telas desenvolvidas representam a proposta inicial da interface do ConectaMente, buscando uma navegação simples e intuitiva para alunos, monitores e coordenação.
+
+As imagens dos protótipos estão armazenadas no repositório do projeto.
+
+Tela 1 — Login
+
+Tela 2 — Cadastro
+
+Tela 3 — Página inicial
+
+Tela 4 — Publicação de dúvida
+
+Tela 5 — Área do monitor
+
+Tela 6 — Agendamento e chat
+
+Tela 7 — Avaliação do atendimento
+
+Tela 8 — Painel da coordenação
+
+6. Considerações finais
+
+A arquitetura e a modelagem apresentadas representam a estrutura inicial do ConectaMente. A proposta organiza as principais funcionalidades do sistema e serve como base para a etapa de desenvolvimento e implementação do projeto.
 
