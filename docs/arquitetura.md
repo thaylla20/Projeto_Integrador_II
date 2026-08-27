@@ -1,145 +1,110 @@
-
 # Arquitetura da Solução — ConectaMente
 
 ## 1. Fluxo do sistema
 
-```mermaid
-flowchart TD
-    A[Início] --> B[Login ou Cadastro]
-    B --> C[Escolher tipo de usuário]
-    C --> D{Precisa de ajuda?}
+Início  
+↓  
+Login ou Cadastro  
+↓  
+Escolher tipo de usuário  
+↓  
+Precisa de ajuda?
 
-    D -->|Sim| E[Selecionar matéria]
-    E --> F[Publicar dúvida]
-    F --> G[Monitor visualiza dúvida]
-    G --> H{Monitor aceita atendimento?}
+**SIM** → Selecionar matéria  
+↓  
+Publicar dúvida  
+↓  
+Monitor visualiza dúvida  
+↓  
+Monitor aceita atendimento?
 
-    H -->|Não| I[Voltar para dúvidas abertas]
-    I --> G
+**NÃO** → Voltar para dúvidas abertas → Monitor visualiza dúvida
 
-    H -->|Sim| J[Agendar atendimento]
-    J --> K[Aluno e monitor realizam atendimento]
-    K --> L[Aluno confirma atendimento]
-    L --> M[Aluno avalia atendimento]
-    M --> N[Coordenação registra atendimento]
-    N --> O[Fim]
+**SIM** → Agendar atendimento  
+↓  
+Aluno e monitor realizam atendimento  
+↓  
+Aluno confirma atendimento  
+↓  
+Aluno avalia atendimento  
+↓  
+Coordenação registra atendimento  
+↓  
+Fim
 
-    D -->|Não| P[Voltar para tela inicial]
-    P --> O
+**NÃO precisa de ajuda** → Voltar para tela inicial / menu principal → Fim
 
-2. Arquitetura da solução
+
+## 2. Arquitetura da solução
 
 A solução do ConectaMente é organizada para permitir que alunos encontrem ajuda em matérias nas quais possuem dúvidas, conectando-os com monitores disponíveis.
 
 O sistema possui as seguintes partes principais:
 
-Autenticação e cadastro: permite que o usuário faça login ou crie uma conta no sistema.
-
-Gerenciamento de usuários: identifica o tipo de usuário, como aluno, monitor ou coordenação.
-
-Gerenciamento de matérias: mantém as matérias disponíveis para que o aluno escolha aquela relacionada à sua dúvida.
-
-Gerenciamento de dúvidas: permite que o aluno publique uma dúvida e acompanhe seu atendimento.
-
-Gerenciamento de atendimentos: permite que um monitor aceite uma dúvida e seja realizado o agendamento do atendimento.
-
-Avaliação: permite que o aluno avalie o atendimento realizado.
-
-Coordenação: registra e acompanha os atendimentos realizados e as atividades dos monitores.
-
-Banco de dados: armazena usuários, dúvidas, matérias, atendimentos e avaliações.
+- Autenticação e cadastro
+- Gerenciamento de usuários
+- Gerenciamento de matérias
+- Gerenciamento de dúvidas
+- Gerenciamento de atendimentos
+- Avaliação dos atendimentos
+- Coordenação
+- Banco de dados
 
 
-3. Modelo de dados
+## 3. Modelo de dados
 
-erDiagram
-    USUARIO ||--o{ DUVIDA : publica
-    MATERIA ||--o{ DUVIDA : classifica
-    DUVIDA ||--o{ ATENDIMENTO : gera
-    ATENDIMENTO ||--o{ AVALIACAO : recebe
-    USUARIO ||--o{ ATENDIMENTO : participa
-    USUARIO ||--o{ CERTIFICADO : possui
+### Usuário
+- ID
+- Nome
+- E-mail
+- Senha
+- Tipo de usuário
 
-    USUARIO {
-        int id PK
-        string nome
-        string email
-        string senha
-        string tipo_usuario
-    }
+### Dúvida
+- ID
+- Descrição
+- Foto
+- Status
 
-    DUVIDA {
-        int id PK
-        string descricao
-        string foto
-        string status
-    }
+### Matéria
+- ID
+- Nome da matéria
 
-    MATERIA {
-        int id PK
-        string nome
-    }
+### Atendimento
+- ID
+- Data
+- Horário
+- Local
+- Status
 
-    ATENDIMENTO {
-        int id PK
-        date data
-        string horario
-        string local
-        string status
-    }
+### Avaliação
+- ID
+- Nota
+- Comentário
 
-    AVALIACAO {
-        int id PK
-        int nota
-        string comentario
-    }
-
-    CERTIFICADO {
-        int id PK
-        date data_emissao
-        int horas_voluntariado
-    }
-
-4. Justificativa das escolhas
-
-Usuário: responsável pelo acesso ao sistema e pelo papel desempenhado na plataforma.
-
-Dúvida: representa a pergunta ou dificuldade publicada pelo aluno, podendo conter descrição, foto e status.
-
-Matéria: organiza as dúvidas de acordo com a disciplina relacionada.
-
-Atendimento: representa a ajuda oferecida pelo monitor ao aluno, podendo possuir data, horário, local e status.
-
-Avaliação: permite que o aluno registre uma nota e um comentário sobre o atendimento.
-
-Certificado: registra a participação do monitor e suas horas de voluntariado.
-
-Banco de dados: permite armazenar e organizar as informações necessárias para o funcionamento do sistema.
+### Certificado
+- ID
+- Data de emissão
+- Horas de voluntariado
 
 
-5. Protótipos de interface
+## 4. Justificativa das escolhas
 
-As telas desenvolvidas representam a proposta inicial da interface do ConectaMente, buscando uma navegação simples e intuitiva para alunos, monitores e coordenação.
+- **Usuário:** pessoa cadastrada no sistema, podendo ser estudante ou monitor.
+- **Dúvida:** pergunta publicada por um usuário e relacionada a uma matéria.
+- **Matéria:** categoria ou disciplina à qual uma dúvida pertence.
+- **Atendimento:** encontro presencial ou online criado a partir de uma dúvida aceita por um monitor.
+- **Avaliação:** nota e comentário dados pelo usuário após o atendimento.
+- **Certificado:** registra a participação e as horas de voluntariado do usuário.
+- **Banco de dados:** armazena e organiza as informações necessárias para o funcionamento do sistema.
 
-As imagens dos protótipos estão armazenadas no repositório do projeto.
 
-Tela 1 — Login
+## 5. Funcionamento geral
 
-Tela 2 — Cadastro
+O funcionamento do ConectaMente começa com o usuário realizando o login ou cadastro. Depois, ele escolhe seu tipo de usuário.
 
-Tela 3 — Página inicial
+Quando um aluno precisa de ajuda, seleciona a matéria relacionada à dúvida e publica sua pergunta. Um monitor pode visualizar as dúvidas abertas e aceitar um atendimento.
 
-Tela 4 — Publicação de dúvida
+Após a aceitação, o atendimento é agendado e realizado entre o aluno e o monitor. Ao final, o aluno confirma e avalia o atendimento. A coordenação registra o atendimento concluído.
 
-Tela 5 — Área do monitor
-
-Tela 6 — Agendamento e chat
-
-Tela 7 — Avaliação do atendimento
-
-Tela 8 — Painel da coordenação
-
-6. Considerações finais
-
-A arquitetura e a modelagem apresentadas representam a estrutura inicial do ConectaMente. A proposta organiza as principais funcionalidades do sistema e serve como base para a etapa de desenvolvimento e implementação do projeto.
-
+O objetivo do ConectaMente é facilitar a comunicação entre alunos e monitores, criando um espaço organizado para tirar dúvidas e incentivar o aprendizado entre os estudantes.
