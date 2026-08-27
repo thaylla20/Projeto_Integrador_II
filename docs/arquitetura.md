@@ -2,38 +2,30 @@
 
 ## 1. Fluxo do sistema
 
-Início  
-↓  
-Login ou Cadastro  
-↓  
-Escolher tipo de usuário  
-↓  
-Precisa de ajuda?
+```mermaid
+flowchart TD
+    A([Início]) --> B[Login ou Cadastro]
+    B --> C[Escolher tipo de usuário]
+    C --> D{Precisa de ajuda?}
 
-**SIM** → Selecionar matéria  
-↓  
-Publicar dúvida  
-↓  
-Monitor visualiza dúvida  
-↓  
-Monitor aceita atendimento?
+    D -->|SIM| E[Selecionar matéria]
+    E --> F[Publicar dúvida]
+    F --> G[Monitor visualiza dúvida]
+    G --> H{Monitor aceita atendimento?}
 
-**NÃO** → Voltar para dúvidas abertas → Monitor visualiza dúvida
+    H -->|NÃO| I[Voltar para dúvidas abertas]
+    I --> G
 
-**SIM** → Agendar atendimento  
-↓  
-Aluno e monitor realizam atendimento  
-↓  
-Aluno confirma atendimento  
-↓  
-Aluno avalia atendimento  
-↓  
-Coordenação registra atendimento  
-↓  
-Fim
+    H -->|SIM| J[Agendar atendimento]
+    J --> K[Aluno e monitor realizam atendimento]
+    K --> L[Aluno confirma atendimento]
+    L --> M[Aluno avalia atendimento]
+    M --> N[Coordenação registra atendimento]
+    N --> O([Fim])
 
-**NÃO precisa de ajuda** → Voltar para tela inicial / menu principal → Fim
-
+    D -->|NÃO| P[Voltar para tela inicial / menu principal]
+    P --> O
+```
 
 ## 2. Arquitetura da solução
 
@@ -41,52 +33,66 @@ A solução do ConectaMente é organizada para permitir que alunos encontrem aju
 
 O sistema possui as seguintes partes principais:
 
-- Autenticação e cadastro
-- Gerenciamento de usuários
-- Gerenciamento de matérias
-- Gerenciamento de dúvidas
-- Gerenciamento de atendimentos
-- Avaliação dos atendimentos
-- Coordenação
-- Banco de dados
-
+- **Autenticação e cadastro:** permite que o usuário faça login ou crie uma conta no sistema.
+- **Gerenciamento de usuários:** identifica o tipo de usuário, como aluno, monitor ou coordenação.
+- **Gerenciamento de matérias:** mantém as matérias disponíveis para que o aluno escolha aquela relacionada à sua dúvida.
+- **Gerenciamento de dúvidas:** permite que o aluno publique uma dúvida e acompanhe seu atendimento.
+- **Gerenciamento de atendimentos:** permite que um monitor aceite uma dúvida e seja realizado o agendamento do atendimento.
+- **Avaliação:** permite que o aluno avalie o atendimento realizado.
+- **Coordenação:** registra e acompanha os atendimentos realizados e as atividades dos monitores.
+- **Banco de dados:** armazena usuários, dúvidas, matérias, atendimentos e avaliações.
 
 ## 3. Modelo de dados
 
-### Usuário
-- ID
-- Nome
-- E-mail
-- Senha
-- Tipo de usuário
+```mermaid
+erDiagram
+    USUARIO ||--o{ DUVIDA : publica
+    MATERIA ||--o{ DUVIDA : classifica
+    DUVIDA ||--o{ ATENDIMENTO : gera
+    USUARIO ||--o{ ATENDIMENTO : participa
+    ATENDIMENTO ||--o{ AVALIACAO : recebe
+    USUARIO ||--o{ CERTIFICADO : possui
 
-### Dúvida
-- ID
-- Descrição
-- Foto
-- Status
+    USUARIO {
+        int id PK
+        string nome
+        string email
+        string senha
+        string tipo_usuario
+    }
 
-### Matéria
-- ID
-- Nome da matéria
+    DUVIDA {
+        int id PK
+        string descricao
+        string foto
+        string status
+    }
 
-### Atendimento
-- ID
-- Data
-- Horário
-- Local
-- Status
+    MATERIA {
+        int id PK
+        string nome
+    }
 
-### Avaliação
-- ID
-- Nota
-- Comentário
+    ATENDIMENTO {
+        int id PK
+        date data
+        string horario
+        string local
+        string status
+    }
 
-### Certificado
-- ID
-- Data de emissão
-- Horas de voluntariado
+    AVALIACAO {
+        int id PK
+        int nota
+        string comentario
+    }
 
+    CERTIFICADO {
+        int id PK
+        date data_emissao
+        int horas_voluntariado
+    }
+```
 
 ## 4. Justificativa das escolhas
 
@@ -97,7 +103,6 @@ O sistema possui as seguintes partes principais:
 - **Avaliação:** nota e comentário dados pelo usuário após o atendimento.
 - **Certificado:** registra a participação e as horas de voluntariado do usuário.
 - **Banco de dados:** armazena e organiza as informações necessárias para o funcionamento do sistema.
-
 
 ## 5. Funcionamento geral
 
