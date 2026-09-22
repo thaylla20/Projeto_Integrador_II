@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ConectaMente</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f4f6fb;color:#222}
+header{background:#4f46e5;color:white;padding:18px;text-align:center}
+main{max-width:900px;margin:20px auto;padding:15px}
+.card{background:white;padding:20px;margin-bottom:15px;border-radius:12px;box-shadow:0 2px 8px #0001}
+input,select,textarea,button{width:100%;padding:10px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
+button{background:#4f46e5;color:white;border:0;cursor:pointer}
+button:hover{opacity:.9}
+.hidden{display:none}
+.doubt{border:1px solid #ddd;padding:12px;border-radius:10px;margin:10px 0}
+.tag{display:inline-block;background:#e8e7ff;padding:5px 8px;border-radius:8px;margin:3px}
+h2{margin-top:0}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>ConectaMente</h1>
+<p>Estudantes ajudando estudantes</p>
+</header>
+
+<main>
+
+<div id="login" class="card">
+<h2>Entrar no ConectaMente</h2>
+<input id="name" placeholder="Nome">
+<input id="email" placeholder="E-mail escolar">
+<select id="role">
+<option value="aprendiz">Aprendiz</option>
+<option value="monitor">Monitor</option>
+<option value="coordenacao">Coordenação</option>
+</select>
+<button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" class="hidden">
+
+<div class="card">
+<h2 id="welcome"></h2>
+<p>Escolha uma opção abaixo para utilizar o sistema.</p>
+</div>
+
+<div id="student" class="card hidden">
+<h2>Publicar dúvida</h2>
+<select id="subject">
+<option>Matemática</option>
+<option>Português</option>
+<option>Inglês</option>
+<option>Química</option>
+<option>Física</option>
+<option>Programação</option>
+</select>
+<textarea id="question" placeholder="Digite sua dúvida..."></textarea>
+<button onclick="publish()">Publicar dúvida</button>
+
+<h2>Dúvidas abertas</h2>
+<div id="doubts"></div>
+</div>
+
+<div id="monitor" class="card hidden">
+<h2>Área do Monitor</h2>
+<p>Matérias que você domina:</p>
+<label><input type="checkbox" value="Matemática"> Matemática</label>
+<label><input type="checkbox" value="Português"> Português</label>
+<label><input type="checkbox" value="Inglês"> Inglês</label>
+<label><input type="checkbox" value="Química"> Química</label>
+<label><input type="checkbox" value="Física"> Física</label>
+<label><input type="checkbox" value="Programação"> Programação</label>
+<button onclick="saveSubjects()">Salvar matérias</button>
+
+<h2>Solicitações</h2>
+<div id="requests"></div>
+</div>
+
+<div id="coord" class="card hidden">
+<h2>Painel da Coordenação</h2>
+<p>Atendimentos registrados:</p>
+<div id="records"></div>
+</div>
+
+<div class="card">
+<h2>Agenda</h2>
+<div id="agenda">Nenhum atendimento agendado.</div>
+</div>
+
+<div class="card">
+<h2>Chat</h2>
+<div id="chat"></div>
+<input id="message" placeholder="Digite uma mensagem">
+<button onclick="sendMessage()">Enviar</button>
+</div>
+
+</div>
+</main>
+
+<script>
+let user=null;
+let doubts=JSON.parse(localStorage.getItem("doubts"))||[
+{id:1,student:"Aluno exemplo",subject:"Matemática",question:"Tenho dúvida em média ponderada.",status:"aberta"}
+];
+let meetings=JSON.parse(localStorage.getItem("meetings"))||[];
+let records=JSON.parse(localStorage.getItem("records"))||[];
+let messages=JSON.parse(localStorage.getItem("messages"))||[];
+
+function save(){
+localStorage.setItem("doubts",JSON.stringify(doubts));
+localStorage.setItem("meetings",JSON.stringify(meetings));
+localStorage.setItem("records",JSON.stringify(records));
+localStorage.setItem("messages",JSON.stringify(messages));
+}
+
+function login(){
+let n=document.getElementById("name").value.trim();
+let e=document.getElementById("email").value.trim();
+let r=document.getElementById("role").value;
+if(!n||!e)return alert("Preencha nome e e-mail.");
+user={name:n,email:e,role:r};
+document.getElementById("login").classList.add("hidden");
+document.getElementById("app").classList.remove("hidden");
+document.getElementById("welcome").innerText="Olá, "+n+"!";
+if(r==="aprendiz")document.getElementById("student").classList.remove("hidden");
+if(r==="monitor")document.getElementById("monitor").classList.remove("hidden");
+if(r==="coordenacao")document.getElementById("coord").classList.remove("hidden");
+render();
+}
+
+function publish(){
+let s=document.getElementById("subject").value;
+let q=document.getElementById("question").value.trim();
+if(!q)return alert("Digite sua dúvida.");
+doubts.push({
+id:Date.now(),
+student:user.name,
+subject:s,
+question:q,
+status:"aberta"
+});
+document.getElementById("question").value="";
+save();
+render();
+alert("Dúvida publicada!");
+}
+
+function accept(id){
+let d=doubts.find(x=>x.id===id);
+if(!d)return;
+d.status="aceita";
+d.monitor=user.name;
+save();
+render();
+alert("Atendimento aceito!");
+}
+
+function schedule(id){
+let d=doubts.find(x=>x.id===id);
+if(!d)return;
+let time=prompt("Digite o horário do atendimento:");
+if(!time)return;
+meetings.push({
+id:Date.now(),
+student:d.student,
+monitor:user.name,
+subject:d.subject,
+time:time,
+status:"agendado"
+});
+d.status="agendada";
+save();
+render();
+}
+
+function finish(id){
+let m=meetings.find(x=>x.id===id);
+if(!m)return;
+m.status="concluído";
+let rating=prompt("Dê uma nota de 1 a 5 para o atendimento:");
+records.push({
+student:m.student,
+monitor:m.monitor,
+subject:m.subject,
+rating:rating||"Sem nota"
+});
+save();
+render();
+alert("Atendimento confirmado!");
+}
+
+function saveSubjects(){
+let selected=[...document.querySelectorAll("#monitor input:checked")]
+.map(x=>x.value);
+localStorage.setItem("subjects_"+user.name,JSON.stringify(selected));
+alert("Matérias salvas!");
+}
+
+function sendMessage(){
+let text=document.getElementById("message").value.trim();
+if(!text)return;
+messages.push({user:user.name,text:text});
+document.getElementById("message").value="";
+save();
+renderChat();
+}
+
+function render(){
+renderDoubts();
+renderRequests();
+renderAgenda();
+renderRecords();
+renderChat();
+}
+
+function renderDoubts(){
+let box=document.getElementById("doubts");
+if(!box)return;
+box.innerHTML="";
+doubts.forEach(d=>{
+box.innerHTML+=`
+<div class="doubt">
+<b>${d.subject}</b>
+<p>${d.question}</p>
+<small>Aluno: ${d.student}</small>
+<span class="tag">${d.status}</span>
+</div>`;
+});
+}
+
+function renderRequests(){
+let box=document.getElementById("requests");
+if(!box)return;
+box.innerHTML="";
+doubts.filter(d=>d.status==="aberta").forEach(d=>{
+box.innerHTML+=`
+<div class="doubt">
+<b>${d.subject}</b>
+<p>${d.question}</p>
+<p>Aluno: ${d.student}</p>
+<button onclick="accept(${d.id})">Aceitar atendimento</button>
+</div>`;
+});
+doubts.filter(d=>d.status==="aceita"&&d.monitor===user.name).forEach(d=>{
+box.innerHTML+=`
+<div class="doubt">
+<b>${d.subject}</b>
+<p>${d.question}</p>
+<button onclick="schedule(${d.id})">Agendar atendimento</button>
+</div>`;
+});
+}
+
+function renderAgenda(){
+let box=document.getElementById("agenda");
+if(!box)return;
+if(!meetings.length){
+box.innerHTML="Nenhum atendimento agendado.";
+return;
+}
+box.innerHTML="";
+meetings.forEach(m=>{
+box.innerHTML+=`
+<div class="doubt">
+<b>${m.subject}</b>
+<p>Aluno: ${m.student}</p>
+<p>Monitor: ${m.monitor}</p>
+<p>Horário: ${m.time}</p>
+<p>Status: ${m.status}</p>
+${user&&(user.name===m.student||user.name===m.monitor)&&m.status==="agendado"
+?`<button onclick="finish(${m.id})">Confirmar atendimento</button>`:""}
+</div>`;
+});
+}
+
+function renderRecords(){
+let box=document.getElementById("records");
+if(!box)return;
+box.innerHTML="";
+if(!records.length){
+box.innerHTML="Nenhum atendimento registrado.";
+return;
+}
+records.forEach(r=>{
+box.innerHTML+=`
+<div class="doubt">
+<p><b>Aluno:</b> ${r.student}</p>
+<p><b>Monitor:</b> ${r.monitor}</p>
+<p><b>Matéria:</b> ${r.subject}</p>
+<p><b>Avaliação:</b> ${r.rating}/5</p>
+</div>`;
+});
+}
+
+function renderChat(){
+let box=document.getElementById("chat");
+if(!box)return;
+box.innerHTML="";
+messages.forEach(m=>{
+box.innerHTML+=`<p><b>${m.user}:</b> ${m.text}</p>`;
+});
+}
+</script>
+
+</body>
+</html>
